@@ -1,6 +1,9 @@
+mod error;
+
 use sqlx::PgPool;
 use uuid::Uuid;
 use serde::{Deserialize, Serialize};
+pub use error::{Error,Result};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Game{
