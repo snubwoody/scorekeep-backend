@@ -1,20 +1,20 @@
 mod error;
 pub mod game;
 
-use uuid::Uuid;
+pub use error::{Error, Result};
 use serde::{Deserialize, Serialize};
-pub use error::{Error,Result};
+use uuid::Uuid;
 
-#[derive(Serialize,Deserialize)]
-pub struct User{
+#[derive(Serialize, Deserialize)]
+pub struct User {
     pub id: Uuid,
 }
 
-pub struct State{
-    pool: sqlx::PgPool
+pub struct State {
+    pool: sqlx::PgPool,
 }
 
-impl State{
+impl State {
     pub async fn new() -> Self {
         let db_url = std::env::var("DATABASE_URL").unwrap();
         let pool = sqlx::postgres::PgPoolOptions::new()
@@ -23,26 +23,23 @@ impl State{
             .await
             .unwrap();
 
-        Self{
-            pool
-        }
+        Self { pool }
     }
 }
-pub async fn create_user(pool: &sqlx::PgPool) -> User{
+pub async fn create_user(pool: &sqlx::PgPool) -> User {
     let row = sqlx::query!("INSERT INTO users DEFAULT VALUES RETURNING id")
         .fetch_one(pool)
         .await
         .unwrap();
-    
-    let user = User{id:row.id};
+
+    let user = User { id: row.id };
     user
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[sqlx::test]
     async fn add_user_to_db(pool: sqlx::PgPool) {
         let user = create_user(&pool).await;
