@@ -1,14 +1,13 @@
 mod error;
 pub mod game;
 
-use sqlx::PgPool;
 use uuid::Uuid;
 use serde::{Deserialize, Serialize};
 pub use error::{Error,Result};
 
 #[derive(Serialize,Deserialize)]
-struct User{
-    id: Uuid,
+pub struct User{
+    pub id: Uuid,
 }
 
 pub struct State{
@@ -29,7 +28,7 @@ impl State{
         }
     }
 }
-async fn create_user(pool: &sqlx::PgPool) -> User{
+pub async fn create_user(pool: &sqlx::PgPool) -> User{
     let row = sqlx::query!("INSERT INTO users DEFAULT VALUES RETURNING id")
         .fetch_one(pool)
         .await
