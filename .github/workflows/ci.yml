@@ -1,6 +1,7 @@
 name: CI
 env:
   DATABASE_URL: postgres://postgres:db1234@localhost:5432/postgres
+  CARGO_TERM_COLOR: always
 on:
   push:
     branches: ["main"]
