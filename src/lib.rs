@@ -1,9 +1,9 @@
 mod error;
 pub mod game;
 
-use rand::distr::Alphanumeric;
-use rand::Rng;
 pub use error::{Error, Result};
+use rand::Rng;
+use rand::distr::Alphanumeric;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -39,11 +39,11 @@ pub async fn create_user(pool: &sqlx::PgPool) -> User {
 }
 
 /// Generate a random alphanumeric string with a specified length.
-/// 
+///
 /// # Example
 /// ```
 /// use scorekeep::gen_random_string;
-/// 
+///
 /// let s = gen_random_string(10);
 /// assert_eq!(s.len(),10);
 /// ```
@@ -60,7 +60,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn generate_random_string(){
+    fn generate_random_string() {
         let string = gen_random_string(6);
         dbg!(string);
     }

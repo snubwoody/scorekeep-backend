@@ -7,13 +7,13 @@ async fn create_game_code(pool: PgPool) -> scorekeep::Result<()> {
     let games = GameService::new(pool.clone());
     let game = games.create_game("").await;
     let code = games.create_code(game.id).await?;
-    
-    let row = sqlx::query!("SELECT * FROM game_codes WHERE code = $1",code)
+
+    let row = sqlx::query!("SELECT * FROM game_codes WHERE code = $1", code)
         .fetch_one(&pool)
         .await?;
-    
+
     assert_eq!(row.game, game.id);
-    
+
     Ok(())
 }
 
@@ -22,7 +22,7 @@ async fn game_code_is_6_characters(pool: PgPool) -> scorekeep::Result<()> {
     let games = GameService::new(pool.clone());
     let game = games.create_game("").await;
     let code = games.create_code(game.id).await?;
-    assert_eq!(code.len(),6);
+    assert_eq!(code.len(), 6);
     Ok(())
 }
 

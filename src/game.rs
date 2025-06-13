@@ -1,5 +1,5 @@
+use crate::{Error, gen_random_string};
 use chrono::{DateTime, Duration, Utc};
-use crate::{gen_random_string, Error};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -29,7 +29,7 @@ impl GameService {
 
     /// Create a 6 character alphanumeric code that users can use
     /// to join a game.
-    pub async fn create_code(&self,game_id: Uuid) -> crate::Result<String  > {
+    pub async fn create_code(&self, game_id: Uuid) -> crate::Result<String> {
         // With a 6 length alphanumeric code,
         // there's about 56 billion variations so collision
         // isn't likely
@@ -41,12 +41,12 @@ impl GameService {
             VALUES($1,$2,$3) 
             RETURNING code
             ",
-            code, 
+            code,
             expiry,
             game_id,
         )
-            .fetch_one(&self.pool)
-            .await?;
+        .fetch_one(&self.pool)
+        .await?;
 
         Ok(row.code)
     }
