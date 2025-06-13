@@ -7,6 +7,11 @@ on:
   pull_request:
     branches: ["main"]
 jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo fmt --check
   test:
     runs-on: ubuntu-latest
     services:
@@ -18,6 +23,7 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd pg_isready
+          --health-interval 10s
     steps:
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
@@ -32,4 +38,5 @@ jobs:
         run: cargo install sqlx-cli
       - name: Apply migrations
         run: sqlx migrate run
-      - run: cargo nextest run
+      - name: Run tests
+        run: cargo nextest run
