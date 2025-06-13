@@ -1,4 +1,5 @@
-use crate::Error;
+use crate::{Error, gen_random_string};
+use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -24,6 +25,30 @@ pub struct GameService {
 impl GameService {
     pub fn new(pool: sqlx::PgPool) -> Self {
         Self { pool }
+    }
+
+    /// Create a 6 character alphanumeric code that users can use
+    /// to join a game.
+    pub async fn create_code(&self, game_id: Uuid) -> crate::Result<String> {
+        // With a 6 length alphanumeric code,
+        // there's about 56 billion variations so collision
+        // isn't likely
+        let code = gen_random_string(6);
+        let expiry = Utc::now() + Duration::days(7);
+        let row = sqlx::query!(
+            "
+            INSERT INTO game_codes(code,expires_at,game) 
+            VALUES($1,$2,$3) 
+            RETURNING code
+            ",
+            code,
+            expiry,
+            game_id,
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(row.code)
     }
 
     /// Create a new game.
