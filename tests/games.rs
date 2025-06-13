@@ -1,5 +1,5 @@
 use scorekeep::create_user;
-use scorekeep::game::{GameService};
+use scorekeep::game::GameService;
 use sqlx::PgPool;
 
 #[sqlx::test]
@@ -37,6 +37,21 @@ async fn add_player_to_game(pool: PgPool) -> scorekeep::Result<()> {
 
 #[sqlx::test]
 async fn set_players_points(pool: PgPool) -> scorekeep::Result<()> {
+    let games = GameService::new(pool.clone());
+    let user = create_user(&pool).await;
+    let game = games.create_game("My game").await;
+    games.add_player(game.id, user.id).await?;
+    games.set_points(game.id, user.id, 100).await?;
+
+    let row = sqlx::query!("SELECT * FROM game_participants WHERE player = $1", user.id)
+        .fetch_one(&pool)
+        .await?;
+    assert_eq!(row.points, 100);
+    Ok(())
+}
+
+#[sqlx::test]
+async fn players_in_game(pool: PgPool) -> scorekeep::Result<()> {
     let games = GameService::new(pool.clone());
     let user = create_user(&pool).await;
     let game = games.create_game("My game").await;

@@ -17,16 +17,17 @@ struct Player {
 }
 
 #[derive(Clone)]
-pub struct GameService{
+pub struct GameService {
     pool: sqlx::PgPool,
 }
 
-impl GameService{
-    pub fn new(pool: sqlx::PgPool) -> Self{
-        Self{pool}
+impl GameService {
+    pub fn new(pool: sqlx::PgPool) -> Self {
+        Self { pool }
     }
 
-    pub async fn create_game(&self,name: &str) -> Game {
+    /// Create a new game.
+    pub async fn create_game(&self, name: &str) -> Game {
         let row = sqlx::query!("INSERT INTO games(name) VALUES ($1) RETURNING *", name)
             .fetch_one(&self.pool)
             .await
@@ -41,6 +42,7 @@ impl GameService{
         game
     }
 
+    /// Get a game from the database.
     pub async fn get_game(&self, id: Uuid) -> Option<Game> {
         let result = sqlx::query!("SELECT * FROM games WHERE id = $1", id)
             .fetch_one(&self.pool)
@@ -61,36 +63,29 @@ impl GameService{
     }
 
     /// Add a player to a game
-    pub async fn add_player(&self,game_id: Uuid, user_id: Uuid) -> crate::Result<()> {
+    pub async fn add_player(&self, game_id: Uuid, user_id: Uuid) -> crate::Result<()> {
         sqlx::query!(
             "INSERT INTO game_participants(game,player) VALUES ($1,$2)",
             game_id,
             user_id
         )
-            .execute(&self.pool)
-            .await?;
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }
 
     /// Set the game participants points
-    pub async fn set_points(
-        &self,
-        game_id: Uuid,
-        user_id: Uuid,
-        points: i32,
-    ) -> crate::Result<()> {
+    pub async fn set_points(&self, game_id: Uuid, user_id: Uuid, points: i32) -> crate::Result<()> {
         sqlx::query!(
-        "UPDATE game_participants SET points = $1 WHERE game = $2 AND player = $3",
-        points,
-        game_id,
-        user_id
-    )
-            .execute(&self.pool)
-            .await?;
+            "UPDATE game_participants SET points = $1 WHERE game = $2 AND player = $3",
+            points,
+            game_id,
+            user_id
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }
 }
-
-
