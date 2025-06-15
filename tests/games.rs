@@ -18,6 +18,23 @@ async fn create_game_code(pool: PgPool) -> scorekeep::Result<()> {
 }
 
 #[sqlx::test]
+async fn join_game(pool: PgPool) -> scorekeep::Result<()> {
+    let games = GameService::new(pool.clone());
+    let game = games.create_game("").await;
+    let code = games.create_code(game.id).await?;
+    let user = create_user(&pool).await;
+    games.join_game(user.id,&code).await?;
+    
+    let rows = sqlx::query!("SELECT * FROM game_participants")
+        .fetch_all(&pool)
+        .await?;
+
+    assert_eq!(rows.len(), 1);
+
+    Ok(())
+}
+
+#[sqlx::test]
 async fn game_code_is_6_characters(pool: PgPool) -> scorekeep::Result<()> {
     let games = GameService::new(pool.clone());
     let game = games.create_game("").await;

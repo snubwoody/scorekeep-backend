@@ -26,6 +26,20 @@ impl GameService {
     pub fn new(pool: sqlx::PgPool) -> Self {
         Self { pool }
     }
+    
+    /// Join a game using it's 6 character game code.
+    pub async fn join_game(&self, user_id: Uuid,code: &str) -> crate::Result<()>{
+        sqlx::query!(
+            "INSERT INTO game_participants(game,player)
+            SELECT game, $1 FROM game_codes WHERE code = $2",
+            user_id,
+            code
+        )
+            .execute(&self.pool)
+            .await?;
+        
+        Ok(())
+    } 
 
     /// Create a 6 character alphanumeric code that users can use
     /// to join a game.
