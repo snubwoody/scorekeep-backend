@@ -18,11 +18,10 @@ impl Api{
 
 #[OpenApi]
 impl Api{
-    #[oai(path = "/api/v1/health", method = "get")]
+    #[oai(path = "/health", method = "get")]
     async fn health(&self) {}
 
-    #[oai(path="/api/v1/games", method = "get")]
+    #[oai(path="/games", method = "get")]
     async fn get_games(&self){
-
     }
 }

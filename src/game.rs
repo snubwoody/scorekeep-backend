@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::{gen_random_string, State};
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
@@ -61,6 +62,22 @@ impl GameService {
             // FIXME: handle the error
             Err(e) => Ok(None),
         }
+    }
+
+    /// Get all games from the database.
+    pub async fn get_all_games(&self) -> crate::Result<Vec<Game>> {
+        let rows = sqlx::query!("SELECT id FROM games")
+            .fetch_all(self.state.pool())
+            .await?;
+        
+        let mut games = vec![];
+        for row in rows{
+            // Unwrapping because we know these games exist
+            let game = self.get_game(row.id).await?.unwrap();
+            games.push(game);
+        }
+        
+        Ok(games)
     }
 
     /// Join a game using its 6 character game code.
