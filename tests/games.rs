@@ -1,13 +1,14 @@
-use scorekeep::create_user;
+use scorekeep::{create_user, State};
 use scorekeep::game::GameService;
 use sqlx::PgPool;
 
 #[sqlx::test]
 async fn players_included_in_game(pool: PgPool) -> scorekeep::Result<()> {
+    let state = State::with_pool(pool.clone());
     let user1 = create_user(&pool).await;
     let user2 = create_user(&pool).await;
 
-    let games = GameService::new(pool.clone());
+    let games = GameService::new(state);
     let game = games.create_game("").await;
     games.add_player(game.id, user1.id).await?;
     games.add_player(game.id, user2.id).await?;
@@ -20,7 +21,8 @@ async fn players_included_in_game(pool: PgPool) -> scorekeep::Result<()> {
 
 #[sqlx::test]
 async fn create_game_code(pool: PgPool) -> scorekeep::Result<()> {
-    let games = GameService::new(pool.clone());
+    let state = State::with_pool(pool.clone());
+    let games = GameService::new(state);
     let game = games.create_game("").await;
     let code = games.create_code(game.id).await?;
 
@@ -35,7 +37,8 @@ async fn create_game_code(pool: PgPool) -> scorekeep::Result<()> {
 
 #[sqlx::test]
 async fn join_game(pool: PgPool) -> scorekeep::Result<()> {
-    let games = GameService::new(pool.clone());
+    let state = State::with_pool(pool.clone());
+    let games = GameService::new(state);
     let game = games.create_game("").await;
     let code = games.create_code(game.id).await?;
     let user = create_user(&pool).await;
@@ -52,7 +55,8 @@ async fn join_game(pool: PgPool) -> scorekeep::Result<()> {
 
 #[sqlx::test]
 async fn game_code_is_6_characters(pool: PgPool) -> scorekeep::Result<()> {
-    let games = GameService::new(pool.clone());
+    let state = State::with_pool(pool.clone());
+    let games = GameService::new(state);
     let game = games.create_game("").await;
     let code = games.create_code(game.id).await?;
     assert_eq!(code.len(), 6);
@@ -61,7 +65,8 @@ async fn game_code_is_6_characters(pool: PgPool) -> scorekeep::Result<()> {
 
 #[sqlx::test]
 async fn game_added_to_db(pool: PgPool) {
-    let games = GameService::new(pool.clone());
+    let state = State::with_pool(pool.clone());
+    let games = GameService::new(state);
     let game = games.create_game("Movie Night").await;
     sqlx::query!("SELECT * FROM games WHERE id = $1", game.id)
         .fetch_one(&pool)
@@ -71,7 +76,8 @@ async fn game_added_to_db(pool: PgPool) {
 
 #[sqlx::test]
 async fn get_game(pool: PgPool) -> scorekeep::Result<()> {
-    let games = GameService::new(pool.clone());
+    let state = State::with_pool(pool);
+    let games = GameService::new(state);
     let game = games.create_game("Movie Night").await;
     let result = games.get_game(game.id).await?;
     assert!(result.is_some());
@@ -80,7 +86,8 @@ async fn get_game(pool: PgPool) -> scorekeep::Result<()> {
 
 #[sqlx::test]
 async fn add_player_to_game(pool: PgPool) -> scorekeep::Result<()> {
-    let games = GameService::new(pool.clone());
+    let state = State::with_pool(pool.clone());
+    let games = GameService::new(state);
     let user = create_user(&pool).await;
     let game = games.create_game("My game").await;
     games.add_player(game.id, user.id).await?;
@@ -95,7 +102,8 @@ async fn add_player_to_game(pool: PgPool) -> scorekeep::Result<()> {
 
 #[sqlx::test]
 async fn set_players_points(pool: PgPool) -> scorekeep::Result<()> {
-    let games = GameService::new(pool.clone());
+    let state = State::with_pool(pool.clone());
+    let games = GameService::new(state);
     let user = create_user(&pool).await;
     let game = games.create_game("My game").await;
     games.add_player(game.id, user.id).await?;

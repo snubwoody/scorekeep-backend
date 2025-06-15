@@ -1,4 +1,4 @@
-use crate::gen_random_string;
+use crate::{gen_random_string, State};
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -20,18 +20,18 @@ pub struct Player {
 
 #[derive(Clone)]
 pub struct GameService {
-    pool: sqlx::PgPool,
+    state: State,
 }
 
 impl GameService {
-    pub fn new(pool: sqlx::PgPool) -> Self {
-        Self { pool }
+    pub fn new(state: State) -> Self {
+        Self { state }
     }
 
     /// Get a game from the database.
     pub async fn get_game(&self, id: Uuid) -> crate::Result<Option<Game>> {
         let rows = sqlx::query!("SELECT * FROM game_participants WHERE game = $1", id)
-            .fetch_all(&self.pool)
+            .fetch_all(self.state.pool())
             .await?;
 
         let players: Vec<Player> = rows
@@ -45,7 +45,7 @@ impl GameService {
             .collect();
 
         let result = sqlx::query!("SELECT * FROM games WHERE id = $1", id)
-            .fetch_one(&self.pool)
+            .fetch_one(self.state.pool())
             .await;
 
         match result {
@@ -63,7 +63,7 @@ impl GameService {
         }
     }
 
-    /// Join a game using it's 6 character game code.
+    /// Join a game using its 6 character game code.
     pub async fn join_game(&self, user_id: Uuid, code: &str) -> crate::Result<()> {
         sqlx::query!(
             "INSERT INTO game_participants(game,player)
@@ -71,7 +71,7 @@ impl GameService {
             user_id,
             code
         )
-        .execute(&self.pool)
+        .execute(self.state.pool())
         .await?;
 
         Ok(())
@@ -95,7 +95,7 @@ impl GameService {
             expiry,
             game_id,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(self.state.pool())
         .await?;
 
         Ok(row.code)
@@ -104,7 +104,7 @@ impl GameService {
     /// Create a new game.
     pub async fn create_game(&self, name: &str) -> Game {
         let row = sqlx::query!("INSERT INTO games(name) VALUES ($1) RETURNING *", name)
-            .fetch_one(&self.pool)
+            .fetch_one(self.state.pool())
             .await
             .unwrap();
 
@@ -124,7 +124,7 @@ impl GameService {
             game_id,
             user_id
         )
-        .execute(&self.pool)
+        .execute(self.state.pool())
         .await?;
 
         Ok(())
@@ -138,7 +138,7 @@ impl GameService {
             game_id,
             user_id
         )
-        .execute(&self.pool)
+        .execute(self.state.pool())
         .await?;
 
         Ok(())

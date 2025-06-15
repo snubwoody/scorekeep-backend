@@ -1,18 +1,14 @@
 mod error;
-pub mod game;
 mod api;
+pub mod game;
 
-use std::env;
-use http::StatusCode;
 use poem::{Route, Server};
 use poem::listener::TcpListener;
 use poem_openapi::{OpenApi, OpenApiService};
-use poem_openapi::payload::Response;
 pub use error::{Error, Result};
 use rand::Rng;
 use rand::distr::Alphanumeric;
 use serde::{Deserialize, Serialize};
-use sqlx::postgres::PgPoolOptions;
 use tracing::info;
 use uuid::Uuid;
 use crate::api::Api;
@@ -23,20 +19,31 @@ pub struct User {
     pub id: Uuid,
 }
 
+/// Contains common resources such as database connections. Create
+/// one and use it for the whole app.
+#[derive(Clone)]
 pub struct State {
     pool: sqlx::PgPool,
 }
 
 impl State {
-    pub async fn new() -> Self {
+    pub async fn new() -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL").unwrap();
         let pool = sqlx::postgres::PgPoolOptions::new()
-            .max_connections(5)
+            .max_connections(15)
             .connect(&db_url)
-            .await
-            .unwrap();
+            .await?;
 
+        Ok(Self { pool })
+    }
+    
+    /// Create a state object with a predefined pool
+    pub fn with_pool(pool: sqlx::PgPool) -> Self {
         Self { pool }
+    }
+    
+    pub fn pool(&self) -> &sqlx::PgPool {
+        &self.pool
     }
 }
 pub async fn create_user(pool: &sqlx::PgPool) -> User {
@@ -67,8 +74,8 @@ pub fn gen_random_string(length: usize) -> String {
 }
 
 
-pub async fn router() -> Result<Route>{
-    let api = Api::new().await?;
+pub async fn router(state: State) -> Result<Route>{
+    let api = Api::new(state).await?;
     let api_service = OpenApiService::new(api, "Api", "1.0");
     let ui = api_service.scalar();
     let app = Route::new()
@@ -80,7 +87,8 @@ pub async fn router() -> Result<Route>{
 
 pub async fn main() -> Result<()>{
     tracing_subscriber::fmt::init();
-    let app = router().await?;
+    let state = State::new().await?;
+    let app = router(state).await?;
     let listener = TcpListener::bind("127.0.0.1:3000");
     info!("Listening for requests on port 3000");
     Server::new(listener).run(app).await?;

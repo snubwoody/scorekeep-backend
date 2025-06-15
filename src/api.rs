@@ -1,23 +1,17 @@
-use std::env;
 use poem_openapi::OpenApi;
-use sqlx::postgres::PgPoolOptions;
 use crate::game::GameService;
+use crate::State;
 
 pub struct Api{
+    state: State,
     game_service: GameService
 }
 
 impl Api{
-    pub async fn new() -> crate::Result<Self> {
-        let url = env::var("DATABASE_URL")?;
-        let pool = PgPoolOptions::new()
-            .max_connections(15)
-            .connect(&url)
-            .await?;
+    pub async fn new(state: State) -> crate::Result<Self> {
+        let game_service = GameService::new(state.clone());
 
-        let game_service = GameService::new(pool);
-
-        Ok(Self{game_service})
+        Ok(Self{state,game_service})
 
     }
 }
