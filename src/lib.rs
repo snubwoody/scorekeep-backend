@@ -1,11 +1,22 @@
 mod error;
 pub mod game;
+mod api;
 
+use std::env;
+use http::StatusCode;
+use poem::{Route, Server};
+use poem::listener::TcpListener;
+use poem_openapi::{OpenApi, OpenApiService};
+use poem_openapi::payload::Response;
 pub use error::{Error, Result};
 use rand::Rng;
 use rand::distr::Alphanumeric;
 use serde::{Deserialize, Serialize};
+use sqlx::postgres::PgPoolOptions;
+use tracing::info;
 use uuid::Uuid;
+use crate::api::Api;
+use crate::game::GameService;
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
@@ -53,6 +64,27 @@ pub fn gen_random_string(length: usize) -> String {
         .take(length)
         .map(char::from)
         .collect()
+}
+
+
+pub async fn router() -> Result<Route>{
+    let api = Api::new().await?;
+    let api_service = OpenApiService::new(api, "Api", "1.0");
+    let ui = api_service.scalar();
+    let app = Route::new()
+        .nest("/api/v1", api_service)
+        .nest("/docs", ui);
+
+    Ok(app)
+}
+
+pub async fn main() -> Result<()>{
+    tracing_subscriber::fmt::init();
+    let app = router().await?;
+    let listener = TcpListener::bind("127.0.0.1:3000");
+    info!("Listening for requests on port 3000");
+    Server::new(listener).run(app).await?;
+    Ok(())
 }
 
 #[cfg(test)]
