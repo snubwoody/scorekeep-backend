@@ -107,4 +107,3 @@ async fn set_players_points(pool: PgPool) -> scorekeep::Result<()> {
     assert_eq!(row.points, 100);
     Ok(())
 }
-

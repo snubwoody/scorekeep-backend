@@ -30,27 +30,23 @@ impl GameService {
 
     /// Get a game from the database.
     pub async fn get_game(&self, id: Uuid) -> crate::Result<Option<Game>> {
-        let rows = sqlx::query!(
-            "SELECT * FROM game_participants WHERE game = $1",id
-        )
+        let rows = sqlx::query!("SELECT * FROM game_participants WHERE game = $1", id)
             .fetch_all(&self.pool)
             .await?;
-        
-        let players: Vec<Player> = rows.into_iter().map(|row|
-            Player{
+
+        let players: Vec<Player> = rows
+            .into_iter()
+            .map(|row| Player {
                 id: row.player,
                 joined_at: row.joined_at,
                 username: row.username,
                 points: row.points,
-            }
-        ).collect();
-        
-        let result = sqlx::query!(
-            "SELECT * FROM games WHERE id = $1",
-            id
-        )
-        .fetch_one(&self.pool)
-        .await;
+            })
+            .collect();
+
+        let result = sqlx::query!("SELECT * FROM games WHERE id = $1", id)
+            .fetch_one(&self.pool)
+            .await;
 
         match result {
             Ok(row) => {
