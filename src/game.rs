@@ -1,4 +1,4 @@
-use crate::{Error, gen_random_string};
+use crate::gen_random_string;
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
