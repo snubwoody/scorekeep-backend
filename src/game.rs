@@ -1,17 +1,18 @@
 use std::collections::HashMap;
 use crate::{gen_random_string, State};
 use chrono::{DateTime, Duration, Utc};
+use poem_openapi::Object;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug,Object)]
 pub struct Game {
     pub id: Uuid,
     pub name: String,
     pub players: Vec<Player>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug,Object)]
 pub struct Player {
     pub id: Uuid,
     pub username: String,
@@ -119,11 +120,10 @@ impl GameService {
     }
 
     /// Create a new game.
-    pub async fn create_game(&self, name: &str) -> Game {
+    pub async fn create_game(&self, name: &str) -> crate::Result<Game> {
         let row = sqlx::query!("INSERT INTO games(name) VALUES ($1) RETURNING *", name)
             .fetch_one(self.state.pool())
-            .await
-            .unwrap();
+            .await?;
 
         let game = Game {
             id: row.id,
@@ -131,7 +131,7 @@ impl GameService {
             players: Vec::new(),
         };
 
-        game
+        Ok(game)
     }
 
     /// Add a player to a game
