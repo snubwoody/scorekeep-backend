@@ -3,6 +3,22 @@ use scorekeep::game::GameService;
 use sqlx::PgPool;
 
 #[sqlx::test]
+async fn players_included_in_game(pool: PgPool) -> scorekeep::Result<()> {
+    let user1 = create_user(&pool).await;
+    let user2 = create_user(&pool).await;
+
+    let games = GameService::new(pool.clone());
+    let game = games.create_game("").await;
+    games.add_player(game.id, user1.id).await?;
+    games.add_player(game.id, user2.id).await?;
+
+    let game = games.get_game(game.id).await.unwrap();
+
+    assert_eq!(game.players.len(), 2);
+    Ok(())
+}
+
+#[sqlx::test]
 async fn create_game_code(pool: PgPool) -> scorekeep::Result<()> {
     let games = GameService::new(pool.clone());
     let game = games.create_game("").await;
@@ -23,8 +39,8 @@ async fn join_game(pool: PgPool) -> scorekeep::Result<()> {
     let game = games.create_game("").await;
     let code = games.create_code(game.id).await?;
     let user = create_user(&pool).await;
-    games.join_game(user.id,&code).await?;
-    
+    games.join_game(user.id, &code).await?;
+
     let rows = sqlx::query!("SELECT * FROM game_participants")
         .fetch_all(&pool)
         .await?;

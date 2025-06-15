@@ -11,10 +11,11 @@ pub struct Game {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Player {
-    id: Uuid,
-    username: String,
-    points: i32,
+pub struct Player {
+    pub id: Uuid,
+    pub username: String,
+    pub points: i32,
+    pub joined_at: DateTime<Utc>,
 }
 
 #[derive(Clone)]
@@ -26,20 +27,45 @@ impl GameService {
     pub fn new(pool: sqlx::PgPool) -> Self {
         Self { pool }
     }
-    
+
+    /// Get a game from the database.
+    pub async fn get_game(&self, id: Uuid) -> Option<Game> {
+        let result = sqlx::query!(
+            "
+            SELECT * FROM games WHERE id = $1
+            ",
+            id
+        )
+        .fetch_one(&self.pool)
+        .await;
+
+        match result {
+            Ok(row) => {
+                let game = Game {
+                    id: row.id,
+                    name: row.name,
+                    players: Vec::new(),
+                };
+
+                Some(game)
+            }
+            Err(e) => None,
+        }
+    }
+
     /// Join a game using it's 6 character game code.
-    pub async fn join_game(&self, user_id: Uuid,code: &str) -> crate::Result<()>{
+    pub async fn join_game(&self, user_id: Uuid, code: &str) -> crate::Result<()> {
         sqlx::query!(
             "INSERT INTO game_participants(game,player)
             SELECT game, $1 FROM game_codes WHERE code = $2",
             user_id,
             code
         )
-            .execute(&self.pool)
-            .await?;
-        
+        .execute(&self.pool)
+        .await?;
+
         Ok(())
-    } 
+    }
 
     /// Create a 6 character alphanumeric code that users can use
     /// to join a game.
@@ -79,26 +105,6 @@ impl GameService {
         };
 
         game
-    }
-
-    /// Get a game from the database.
-    pub async fn get_game(&self, id: Uuid) -> Option<Game> {
-        let result = sqlx::query!("SELECT * FROM games WHERE id = $1", id)
-            .fetch_one(&self.pool)
-            .await;
-
-        match result {
-            Ok(row) => {
-                let game = Game {
-                    id: row.id,
-                    name: row.name,
-                    players: Vec::new(),
-                };
-
-                Some(game)
-            }
-            Err(e) => None,
-        }
     }
 
     /// Add a player to a game
