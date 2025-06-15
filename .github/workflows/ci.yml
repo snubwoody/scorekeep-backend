@@ -40,4 +40,4 @@ jobs:
       - name: Apply migrations
         run: sqlx migrate run
       - name: Run tests
-        run: cargo nextest run
+        run: cargo nextest run --profile ci
