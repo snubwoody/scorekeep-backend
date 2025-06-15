@@ -1,6 +1,16 @@
-use poem_openapi::OpenApi;
-use crate::game::GameService;
+use poem_openapi::{ApiResponse, OpenApi};
+use poem_openapi::payload::Json;
+use crate::game::{Game, GameService};
 use crate::State;
+
+#[derive(ApiResponse)]
+enum GetGamesResponse{
+    #[oai(status = 200)]
+    Ok(Json<Vec<Game>>),
+    /// An unknown error occurred
+    #[oai(status = 500)]
+    Unknown,
+}
 
 pub struct Api{
     state: State,
@@ -22,6 +32,15 @@ impl Api{
     async fn health(&self) {}
 
     #[oai(path="/games", method = "get")]
-    async fn get_games(&self){
+    async fn get_games(&self) -> GetGamesResponse{
+        let result = self.game_service.get_all_games().await;
+        match result { 
+            Ok(games) => {
+                GetGamesResponse::Ok(Json(games))
+            },
+            Err(e) => {
+                GetGamesResponse::Unknown
+            }
+        }
     }
 }
