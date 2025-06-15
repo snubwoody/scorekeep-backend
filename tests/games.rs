@@ -12,7 +12,7 @@ async fn players_included_in_game(pool: PgPool) -> scorekeep::Result<()> {
     games.add_player(game.id, user1.id).await?;
     games.add_player(game.id, user2.id).await?;
 
-    let game = games.get_game(game.id).await.unwrap();
+    let game = games.get_game(game.id).await?.unwrap();
 
     assert_eq!(game.players.len(), 2);
     Ok(())
@@ -70,11 +70,12 @@ async fn game_added_to_db(pool: PgPool) {
 }
 
 #[sqlx::test]
-async fn get_game(pool: PgPool) {
+async fn get_game(pool: PgPool) -> scorekeep::Result<()> {
     let games = GameService::new(pool.clone());
     let game = games.create_game("Movie Night").await;
-    let result = games.get_game(game.id).await;
+    let result = games.get_game(game.id).await?;
     assert!(result.is_some());
+    Ok(())
 }
 
 #[sqlx::test]
@@ -107,17 +108,3 @@ async fn set_players_points(pool: PgPool) -> scorekeep::Result<()> {
     Ok(())
 }
 
-#[sqlx::test]
-async fn players_in_game(pool: PgPool) -> scorekeep::Result<()> {
-    let games = GameService::new(pool.clone());
-    let user = create_user(&pool).await;
-    let game = games.create_game("My game").await;
-    games.add_player(game.id, user.id).await?;
-    games.set_points(game.id, user.id, 100).await?;
-
-    let row = sqlx::query!("SELECT * FROM game_participants WHERE player = $1", user.id)
-        .fetch_one(&pool)
-        .await?;
-    assert_eq!(row.points, 100);
-    Ok(())
-}
