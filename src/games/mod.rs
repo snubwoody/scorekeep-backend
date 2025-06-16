@@ -1,8 +1,11 @@
+mod api;
+
 use crate::{State, gen_random_string};
 use chrono::{DateTime, Duration, Utc};
 use poem_openapi::Object;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+pub use api::GamesApi;
 
 #[derive(Serialize, Deserialize, Debug, Object)]
 pub struct Game {
@@ -104,8 +107,8 @@ impl GameService {
         let expiry = Utc::now() + Duration::days(7);
         let row = sqlx::query!(
             "
-            INSERT INTO game_codes(code,expires_at,game) 
-            VALUES($1,$2,$3) 
+            INSERT INTO game_codes(code,expires_at,game)
+            VALUES($1,$2,$3)
             RETURNING code
             ",
             code,

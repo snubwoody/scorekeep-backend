@@ -1,6 +1,5 @@
 use crate::State;
-use crate::games::{Game, GameService};
-use poem_openapi::payload::Json;
+use crate::games::{GameService};
 use poem_openapi::{ApiResponse, Object, OpenApi};
 use serde::{Deserialize, Serialize};
 
@@ -27,28 +26,17 @@ impl ErrorResponse {
     }
 }
 
-#[derive(ApiResponse)]
-enum GetGamesResponse {
-    #[oai(status = 200)]
-    Ok(Json<Vec<Game>>),
-    /// An unknown error occurred
-    #[oai(status = 500)]
-    Unknown(Json<ErrorResponse>),
-}
 
 pub struct Api {
-    state: State,
-    game_service: GameService,
+    pub state: State,
 }
 
 impl Api {
-    pub async fn new(state: State) -> crate::Result<Self> {
-        let game_service = GameService::new(state.clone());
+    pub fn new(state: State) -> Self {
 
-        Ok(Self {
+        Self {
             state,
-            game_service,
-        })
+        }
     }
 }
 
@@ -56,17 +44,4 @@ impl Api {
 impl Api {
     #[oai(path = "/health", method = "get")]
     async fn health(&self) {}
-
-    /// Get all the games that a user is part of.
-    #[oai(path = "/games", method = "get")]
-    async fn get_games(&self) -> GetGamesResponse {
-        let result = self.game_service.get_all_games().await;
-        match result {
-            Ok(games) => GetGamesResponse::Ok(Json(games)),
-            Err(e) => {
-                let response = ErrorResponse::new(&e.to_string());
-                GetGamesResponse::Unknown(Json(response))
-            }
-        }
-    }
 }
