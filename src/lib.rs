@@ -86,6 +86,7 @@ pub async fn router(state: State) -> Result<Route>{
 }
 
 pub async fn main() -> Result<()>{
+    let _ = dotenv::dotenv();
     tracing_subscriber::fmt::init();
     let state = State::new().await?;
     let app = router(state).await?;

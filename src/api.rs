@@ -1,7 +1,32 @@
-use poem_openapi::{ApiResponse, OpenApi};
+use poem_openapi::{ApiResponse, Object, OpenApi};
 use poem_openapi::payload::Json;
+use serde::{Deserialize, Serialize};
 use crate::game::{Game, GameService};
 use crate::State;
+
+
+#[derive(Debug,Serialize,Deserialize,Object,)]
+pub struct ErrorResponse{
+    message: String,
+    #[oai(skip_serializing_if_is_none)]
+    details: Option<String>
+}
+
+impl ErrorResponse{
+    pub fn new(message:&str)->Self{
+        Self{
+            message: message.to_owned(),
+            details: None
+        }
+    }
+    
+    pub fn with_details(message:&str,details: &str)->Self{
+        Self{
+            message: message.to_owned(),
+            details: Some(details.to_owned())
+        }
+    }
+}
 
 #[derive(ApiResponse)]
 enum GetGamesResponse{
@@ -31,10 +56,11 @@ impl Api{
     #[oai(path = "/health", method = "get")]
     async fn health(&self) {}
 
+    /// Get all the games that a user is part of.
     #[oai(path="/games", method = "get")]
     async fn get_games(&self) -> GetGamesResponse{
         let result = self.game_service.get_all_games().await;
-        match result { 
+        match result {
             Ok(games) => {
                 GetGamesResponse::Ok(Json(games))
             },
