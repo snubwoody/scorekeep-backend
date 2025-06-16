@@ -1,5 +1,5 @@
 use crate::State;
-use crate::games::{GameService};
+use crate::games::GameService;
 use poem_openapi::{ApiResponse, Object, OpenApi};
 use serde::{Deserialize, Serialize};
 
@@ -26,17 +26,13 @@ impl ErrorResponse {
     }
 }
 
-
 pub struct Api {
     pub state: State,
 }
 
 impl Api {
     pub fn new(state: State) -> Self {
-
-        Self {
-            state,
-        }
+        Self { state }
     }
 }
 

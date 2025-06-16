@@ -1,8 +1,8 @@
-use poem_openapi::{ApiResponse, OpenApi};
-use poem_openapi::payload::Json;
-use crate::{State};
+use super::{Game, GameService};
+use crate::State;
 use crate::api::ErrorResponse;
-use super::{GameService,Game};
+use poem_openapi::payload::Json;
+use poem_openapi::{ApiResponse, OpenApi};
 
 #[derive(ApiResponse)]
 enum GetGamesResponse {
@@ -28,7 +28,6 @@ impl GamesApi {
         }
     }
 }
-
 
 #[OpenApi]
 impl GamesApi {

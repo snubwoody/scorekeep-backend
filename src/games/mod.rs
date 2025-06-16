@@ -1,11 +1,11 @@
 mod api;
 
 use crate::{State, gen_random_string};
+pub use api::GamesApi;
 use chrono::{DateTime, Duration, Utc};
 use poem_openapi::Object;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-pub use api::GamesApi;
 
 #[derive(Serialize, Deserialize, Debug, Object)]
 pub struct Game {
@@ -91,8 +91,8 @@ impl GameService {
             user_id,
             code
         )
-            .execute(self.state.pool())
-            .await?;
+        .execute(self.state.pool())
+        .await?;
 
         Ok(())
     }
@@ -115,8 +115,8 @@ impl GameService {
             expiry,
             game_id,
         )
-            .fetch_one(self.state.pool())
-            .await?;
+        .fetch_one(self.state.pool())
+        .await?;
 
         Ok(row.code)
     }
@@ -143,8 +143,8 @@ impl GameService {
             game_id,
             user_id
         )
-            .execute(self.state.pool())
-            .await?;
+        .execute(self.state.pool())
+        .await?;
 
         Ok(())
     }
@@ -157,8 +157,8 @@ impl GameService {
             game_id,
             user_id
         )
-            .execute(self.state.pool())
-            .await?;
+        .execute(self.state.pool())
+        .await?;
 
         Ok(())
     }
