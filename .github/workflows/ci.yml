@@ -31,22 +31,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # Permanently cache sqlx
-      - uses: actions/cache@v4
+      - name: 🕜 Cache sqlx-cli
+        uses: actions/cache@v4
         id: sqlx-cli-cache
         with:
           path: ~/.cargo/bin/sqlx
           key: ${{runner.os}}-sqlx-cli
-      - if: ${{steps.sqlx-cli-cache.outputs.cache-hit != 'true'}}
+      - name: 🌐 Install sqlx-cli
+        if: ${{steps.sqlx-cli-cache.outputs.cache-hit != 'true'}}
         run: cargo install sqlx-cli
-      - uses: actions/cache@v4
+      - name: 🚧 Cache dependencies
+        uses: actions/cache@v4
         id: cargo-cache
         with:
           path: |
             ~/.cargo
             target
           key: ${{runner.os}}-cargo-${{hashFiles('Cargo.lock')}}
-      - uses: taiki-e/install-action@nextest
-      - name: Apply migrations
+      - name: 🌐 Install cargo nextest
+        uses: taiki-e/install-action@nextest
+      - name: ‼️ Apply migrations
         run: sqlx migrate run
-      - name: Run tests
+      - name: 👀 Run tests
         run: cargo nextest run --locked --profile ci
