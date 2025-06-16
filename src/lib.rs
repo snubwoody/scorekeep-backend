@@ -62,9 +62,10 @@ pub fn gen_random_string(length: usize) -> String {
 
 pub async fn router(state: State) -> Result<Route> {
     let api = Api::new(state.clone());
-    let games_api = games::GamesApi::new(state);
+    let games_api = games::GamesApi::new(state.clone());
+    let auth_api = auth::AuthApi::new(state);
 
-    let api_service = OpenApiService::new((api, games_api), "Scorekeep API", "1.0")
+    let api_service = OpenApiService::new((api, games_api,auth_api), "Scorekeep API", "1.0")
         .server("http://localhost:3000/api/v1");
     
     let ui = api_service.scalar();

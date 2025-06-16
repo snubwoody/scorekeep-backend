@@ -4,6 +4,7 @@ use poem_openapi::payload::Json;
 use scorekeep::games::{Game, GameService};
 use scorekeep::{State, router};
 use sqlx::PgPool;
+use scorekeep::auth::User;
 use scorekeep::games::api::CreateGameRequest;
 
 #[sqlx::test]
@@ -53,5 +54,20 @@ async fn create_new_game(pool: PgPool) -> scorekeep::Result<()> {
     let body = response.json().await;
     let game: Game = body.value().deserialize();
     assert_eq!(game.name, "My game");
+    Ok(())
+}
+
+#[sqlx::test]
+async fn create_new_user(pool: PgPool) -> scorekeep::Result<()> {
+    let state = State::with_pool(pool);
+    let app = router(state).await?;
+    let cli = TestClient::new(app);
+    
+    let response = cli.post("/api/v1/auth/signup")
+        .send().await;
+
+    response.assert_status(StatusCode::CREATED);
+    let body = response.json().await;
+    let _: User = body.value().deserialize();
     Ok(())
 }

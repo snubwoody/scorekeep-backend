@@ -1,7 +1,11 @@
+pub mod api;
+
+use poem_openapi::Object;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+pub use api::AuthApi;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize,Object)]
 pub struct User {
     pub id: Uuid,
 }
