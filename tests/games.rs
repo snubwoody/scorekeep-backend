@@ -1,5 +1,5 @@
 use scorekeep::games::GameService;
-use scorekeep::{State, create_user};
+use scorekeep::{State, auth::create_user};
 use sqlx::PgPool;
 
 #[sqlx::test]

@@ -1,6 +1,7 @@
 mod api;
 mod error;
 pub mod games;
+pub mod auth;
 
 use crate::api::Api;
 pub use error::{Error, Result};
@@ -9,14 +10,9 @@ use poem::{Route, Server};
 use poem_openapi::OpenApiService;
 use rand::Rng;
 use rand::distr::Alphanumeric;
-use serde::{Deserialize, Serialize};
 use tracing::info;
-use uuid::Uuid;
 
-#[derive(Serialize, Deserialize)]
-pub struct User {
-    pub id: Uuid,
-}
+
 
 /// Contains common resources such as database connections. Create
 /// one and use it for the whole app.
@@ -45,14 +41,7 @@ impl State {
         &self.pool
     }
 }
-pub async fn create_user(pool: &sqlx::PgPool) -> User {
-    let row = sqlx::query!("INSERT INTO users DEFAULT VALUES RETURNING id")
-        .fetch_one(pool)
-        .await
-        .unwrap();
 
-    User { id: row.id }
-}
 
 /// Generate a random alphanumeric string with a specified length.
 ///
@@ -105,14 +94,5 @@ mod tests {
     fn generate_random_string() {
         let string = gen_random_string(6);
         dbg!(string);
-    }
-
-    #[sqlx::test]
-    async fn add_user_to_db(pool: sqlx::PgPool) {
-        let user = create_user(&pool).await;
-        sqlx::query!("SELECT * FROM users WHERE id = $1", user.id)
-            .fetch_one(&pool)
-            .await
-            .unwrap();
     }
 }
