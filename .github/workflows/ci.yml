@@ -2,6 +2,9 @@ name: CI
 env:
   DATABASE_URL: postgres://postgres:db1234@localhost:5432/postgres
   CARGO_TERM_COLOR: always
+concurrency:
+  group: ci-${{github.ref}}
+  cancel-in-progress: true
 on:
   push:
     branches: ["main"]
