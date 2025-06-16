@@ -1,18 +1,18 @@
-use std::collections::HashMap;
-use crate::{gen_random_string, State};
+use crate::{State, gen_random_string};
 use chrono::{DateTime, Duration, Utc};
 use poem_openapi::Object;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, Debug,Object)]
+#[derive(Serialize, Deserialize, Debug, Object)]
 pub struct Game {
     pub id: Uuid,
     pub name: String,
     pub players: Vec<Player>,
 }
 
-#[derive(Serialize, Deserialize, Debug,Object)]
+#[derive(Serialize, Deserialize, Debug, Object)]
 pub struct Player {
     pub id: Uuid,
     pub username: String,
@@ -70,14 +70,14 @@ impl GameService {
         let rows = sqlx::query!("SELECT id FROM games")
             .fetch_all(self.state.pool())
             .await?;
-        
+
         let mut games = vec![];
-        for row in rows{
+        for row in rows {
             // Unwrapping because we know these games exist
             let game = self.get_game(row.id).await?.unwrap();
             games.push(game);
         }
-        
+
         Ok(games)
     }
 

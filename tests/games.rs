@@ -1,5 +1,5 @@
-use scorekeep::{create_user, State};
 use scorekeep::game::GameService;
+use scorekeep::{State, create_user};
 use sqlx::PgPool;
 
 #[sqlx::test]
@@ -29,16 +29,16 @@ async fn get_all_games(pool: PgPool) -> scorekeep::Result<()> {
     let game1 = games.create_game("Game 1").await?;
     let _ = games.create_game("Game 2").await?;
     let game3 = games.create_game("Game 3").await?;
-    
+
     games.add_player(game1.id, user1.id).await?;
     games.add_player(game1.id, user2.id).await?;
     games.add_player(game3.id, user2.id).await?;
-    
+
     let games = games.get_all_games().await?;
     let game1 = &games[0];
     let game2 = &games[1];
     let game3 = &games[2];
-    
+
     assert_eq!(game1.players.len(), 2);
     assert!(game2.players.is_empty());
     assert_eq!(game3.players.len(), 1);

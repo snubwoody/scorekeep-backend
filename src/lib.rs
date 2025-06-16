@@ -1,18 +1,18 @@
-mod error;
 mod api;
+mod error;
 pub mod game;
 
-use poem::{Route, Server};
-use poem::listener::TcpListener;
-use poem_openapi::{OpenApi, OpenApiService};
+use crate::api::Api;
+use crate::game::GameService;
 pub use error::{Error, Result};
+use poem::listener::TcpListener;
+use poem::{Route, Server};
+use poem_openapi::{OpenApi, OpenApiService};
 use rand::Rng;
 use rand::distr::Alphanumeric;
 use serde::{Deserialize, Serialize};
 use tracing::info;
 use uuid::Uuid;
-use crate::api::Api;
-use crate::game::GameService;
 
 #[derive(Serialize, Deserialize)]
 pub struct User {
@@ -36,12 +36,12 @@ impl State {
 
         Ok(Self { pool })
     }
-    
+
     /// Create a state object with a predefined pool
     pub fn with_pool(pool: sqlx::PgPool) -> Self {
         Self { pool }
     }
-    
+
     pub fn pool(&self) -> &sqlx::PgPool {
         &self.pool
     }
@@ -73,19 +73,16 @@ pub fn gen_random_string(length: usize) -> String {
         .collect()
 }
 
-
-pub async fn router(state: State) -> Result<Route>{
+pub async fn router(state: State) -> Result<Route> {
     let api = Api::new(state).await?;
     let api_service = OpenApiService::new(api, "Api", "1.0");
     let ui = api_service.scalar();
-    let app = Route::new()
-        .nest("/api/v1", api_service)
-        .nest("/docs", ui);
+    let app = Route::new().nest("/api/v1", api_service).nest("/docs", ui);
 
     Ok(app)
 }
 
-pub async fn main() -> Result<()>{
+pub async fn main() -> Result<()> {
     let _ = dotenv::dotenv();
     tracing_subscriber::fmt::init();
     let state = State::new().await?;
