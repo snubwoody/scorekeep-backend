@@ -2,12 +2,28 @@ use super::{Game, GameService};
 use crate::State;
 use crate::api::ErrorResponse;
 use poem_openapi::payload::Json;
-use poem_openapi::{ApiResponse, OpenApi};
+use poem_openapi::{ApiResponse, Object, OpenApi};
+use serde::Serialize;
+
+#[derive(Object,Serialize)]
+pub struct CreateGameRequest{
+    pub name: String,
+}
 
 #[derive(ApiResponse)]
 enum GetGamesResponse {
     #[oai(status = 200)]
     Ok(Json<Vec<Game>>),
+    /// An unknown error occurred
+    #[oai(status = 500)]
+    Unknown(Json<ErrorResponse>),
+}
+
+#[derive(ApiResponse)]
+enum CreateGameResponse {
+    /// Game created successfully
+    #[oai(status = 200)]
+    Ok(Json<Game>),
     /// An unknown error occurred
     #[oai(status = 500)]
     Unknown(Json<ErrorResponse>),
@@ -31,7 +47,7 @@ impl GamesApi {
 
 #[OpenApi]
 impl GamesApi {
-    /// Get all the games that a user is part of.
+    /// Get all the games that a user is part of
     #[oai(path = "/games", method = "get")]
     async fn get_games(&self) -> GetGamesResponse {
         let result = self.game_service.get_all_games().await;
@@ -40,6 +56,19 @@ impl GamesApi {
             Err(e) => {
                 let response = ErrorResponse::new(&e.to_string());
                 GetGamesResponse::Unknown(Json(response))
+            }
+        }
+    }
+
+    /// Create a new game
+    #[oai(path = "/game", method = "post")]
+    async fn create_game(&self,req: Json<CreateGameRequest>) -> CreateGameResponse {
+        let result = self.game_service.create_game(&req.name).await;
+        match result {
+            Ok(games) => CreateGameResponse::Ok(Json(games)),
+            Err(e) => {
+                let response = ErrorResponse::new(&e.to_string());
+                CreateGameResponse::Unknown(Json(response))
             }
         }
     }
