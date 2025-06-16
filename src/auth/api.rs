@@ -1,11 +1,11 @@
-use poem_openapi::{ApiResponse, OpenApi};
-use poem_openapi::payload::Json;
-use crate::api::ErrorResponse;
-use crate::auth::{create_user, User};
 use crate::State;
+use crate::api::ErrorResponse;
+use crate::auth::{User, create_user};
+use poem_openapi::payload::Json;
+use poem_openapi::{ApiResponse, OpenApi};
 
 #[derive(ApiResponse)]
-enum SignUpRespose{
+enum SignUpRespose {
     /// User created successfully
     #[oai(status = 201)]
     Ok(Json<User>),
@@ -13,21 +13,21 @@ enum SignUpRespose{
     #[oai(status = 500)]
     Unknown(Json<ErrorResponse>),
 }
-pub struct AuthApi{
-    state: State
+pub struct AuthApi {
+    state: State,
 }
 
 impl AuthApi {
     pub fn new(state: State) -> Self {
-        Self{state}
+        Self { state }
     }
 }
 
-#[OpenApi(prefix_path="/auth")]
+#[OpenApi(prefix_path = "/auth")]
 impl AuthApi {
     /// Sign up a new user
-    #[oai(path="/signup", method="post")]
-    async fn sign_up(&self) -> SignUpRespose{
+    #[oai(path = "/signup", method = "post")]
+    async fn sign_up(&self) -> SignUpRespose {
         let user = create_user(self.state.pool()).await;
         SignUpRespose::Ok(Json(user))
     }
