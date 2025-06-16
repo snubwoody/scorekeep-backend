@@ -1,5 +1,5 @@
 use crate::State;
-use crate::game::{Game, GameService};
+use crate::games::{Game, GameService};
 use poem_openapi::payload::Json;
 use poem_openapi::{ApiResponse, Object, OpenApi};
 use serde::{Deserialize, Serialize};

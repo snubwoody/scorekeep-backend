@@ -1,6 +1,6 @@
 use http::StatusCode;
 use poem::test::TestClient;
-use scorekeep::game::{Game, GameService};
+use scorekeep::games::{Game, GameService};
 use scorekeep::{State, router};
 use sqlx::PgPool;
 

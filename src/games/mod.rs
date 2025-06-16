@@ -2,7 +2,6 @@ use crate::{State, gen_random_string};
 use chrono::{DateTime, Duration, Utc};
 use poem_openapi::Object;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Object)]
@@ -89,8 +88,8 @@ impl GameService {
             user_id,
             code
         )
-        .execute(self.state.pool())
-        .await?;
+            .execute(self.state.pool())
+            .await?;
 
         Ok(())
     }
@@ -113,8 +112,8 @@ impl GameService {
             expiry,
             game_id,
         )
-        .fetch_one(self.state.pool())
-        .await?;
+            .fetch_one(self.state.pool())
+            .await?;
 
         Ok(row.code)
     }
@@ -141,8 +140,8 @@ impl GameService {
             game_id,
             user_id
         )
-        .execute(self.state.pool())
-        .await?;
+            .execute(self.state.pool())
+            .await?;
 
         Ok(())
     }
@@ -155,8 +154,8 @@ impl GameService {
             game_id,
             user_id
         )
-        .execute(self.state.pool())
-        .await?;
+            .execute(self.state.pool())
+            .await?;
 
         Ok(())
     }

@@ -1,9 +1,9 @@
 mod api;
 mod error;
-pub mod game;
+pub mod games;
 
 use crate::api::Api;
-use crate::game::GameService;
+use crate::games::GameService;
 pub use error::{Error, Result};
 use poem::listener::TcpListener;
 use poem::{Route, Server};
