@@ -1,16 +1,20 @@
-use crate::gen_random_string;
+mod api;
+
+use crate::{State, gen_random_string};
+pub use api::GamesApi;
 use chrono::{DateTime, Duration, Utc};
+use poem_openapi::Object;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Object)]
 pub struct Game {
     pub id: Uuid,
     pub name: String,
     pub players: Vec<Player>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Object)]
 pub struct Player {
     pub id: Uuid,
     pub username: String,
@@ -20,18 +24,18 @@ pub struct Player {
 
 #[derive(Clone)]
 pub struct GameService {
-    pool: sqlx::PgPool,
+    state: State,
 }
 
 impl GameService {
-    pub fn new(pool: sqlx::PgPool) -> Self {
-        Self { pool }
+    pub fn new(state: State) -> Self {
+        Self { state }
     }
 
     /// Get a game from the database.
     pub async fn get_game(&self, id: Uuid) -> crate::Result<Option<Game>> {
         let rows = sqlx::query!("SELECT * FROM game_participants WHERE game = $1", id)
-            .fetch_all(&self.pool)
+            .fetch_all(self.state.pool())
             .await?;
 
         let players: Vec<Player> = rows
@@ -45,7 +49,7 @@ impl GameService {
             .collect();
 
         let result = sqlx::query!("SELECT * FROM games WHERE id = $1", id)
-            .fetch_one(&self.pool)
+            .fetch_one(self.state.pool())
             .await;
 
         match result {
@@ -63,7 +67,23 @@ impl GameService {
         }
     }
 
-    /// Join a game using it's 6 character game code.
+    /// Get all games from the database.
+    pub async fn get_all_games(&self) -> crate::Result<Vec<Game>> {
+        let rows = sqlx::query!("SELECT id FROM games")
+            .fetch_all(self.state.pool())
+            .await?;
+
+        let mut games = vec![];
+        for row in rows {
+            // Unwrapping because we know these games exist
+            let game = self.get_game(row.id).await?.unwrap();
+            games.push(game);
+        }
+
+        Ok(games)
+    }
+
+    /// Join a game using its 6 character game code.
     pub async fn join_game(&self, user_id: Uuid, code: &str) -> crate::Result<()> {
         sqlx::query!(
             "INSERT INTO game_participants(game,player)
@@ -71,7 +91,7 @@ impl GameService {
             user_id,
             code
         )
-        .execute(&self.pool)
+        .execute(self.state.pool())
         .await?;
 
         Ok(())
@@ -87,26 +107,25 @@ impl GameService {
         let expiry = Utc::now() + Duration::days(7);
         let row = sqlx::query!(
             "
-            INSERT INTO game_codes(code,expires_at,game) 
-            VALUES($1,$2,$3) 
+            INSERT INTO game_codes(code,expires_at,game)
+            VALUES($1,$2,$3)
             RETURNING code
             ",
             code,
             expiry,
             game_id,
         )
-        .fetch_one(&self.pool)
+        .fetch_one(self.state.pool())
         .await?;
 
         Ok(row.code)
     }
 
     /// Create a new game.
-    pub async fn create_game(&self, name: &str) -> Game {
+    pub async fn create_game(&self, name: &str) -> crate::Result<Game> {
         let row = sqlx::query!("INSERT INTO games(name) VALUES ($1) RETURNING *", name)
-            .fetch_one(&self.pool)
-            .await
-            .unwrap();
+            .fetch_one(self.state.pool())
+            .await?;
 
         let game = Game {
             id: row.id,
@@ -114,7 +133,7 @@ impl GameService {
             players: Vec::new(),
         };
 
-        game
+        Ok(game)
     }
 
     /// Add a player to a game
@@ -124,7 +143,7 @@ impl GameService {
             game_id,
             user_id
         )
-        .execute(&self.pool)
+        .execute(self.state.pool())
         .await?;
 
         Ok(())
@@ -138,7 +157,7 @@ impl GameService {
             game_id,
             user_id
         )
-        .execute(&self.pool)
+        .execute(self.state.pool())
         .await?;
 
         Ok(())

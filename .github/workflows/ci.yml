@@ -2,6 +2,9 @@ name: CI
 env:
   DATABASE_URL: postgres://postgres:db1234@localhost:5432/postgres
   CARGO_TERM_COLOR: always
+concurrency:
+  group: ci-${{github.ref}}
+  cancel-in-progress: true
 on:
   push:
     branches: ["main"]
@@ -27,6 +30,14 @@ jobs:
           --health-interval 10s
     steps:
       - uses: actions/checkout@v4
+      # Permanently cache sqlx
+      - uses: actions/cache@v4
+        id: sqlx-cli-cache
+        with:
+          path: ~/.cargo/bin/sqlx
+          key: ${{runner.os}}-sqlx-cli
+      - if: ${{steps.sqlx-cli-cache.outputs.cache-hit != 'true'}}
+        run: cargo install sqlx-cli
       - uses: actions/cache@v4
         id: cargo-cache
         with:
@@ -35,8 +46,6 @@ jobs:
             target
           key: ${{runner.os}}-cargo-${{hashFiles('Cargo.lock')}}
       - uses: taiki-e/install-action@nextest
-      - if: ${{steps.cargo-cache.outputs.cache-hit != 'true'}}
-        run: cargo install sqlx-cli
       - name: Apply migrations
         run: sqlx migrate run
       - name: Run tests
