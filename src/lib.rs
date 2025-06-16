@@ -75,9 +75,13 @@ pub async fn router(state: State) -> Result<Route> {
     let api = Api::new(state.clone());
     let games_api = games::GamesApi::new(state);
 
-    let api_service = OpenApiService::new((api, games_api), "Scorekeep API", "1.0");
+    let api_service = OpenApiService::new((api, games_api), "Scorekeep API", "1.0")
+        .server("http://localhost:3000/api/v1");
+    
     let ui = api_service.scalar();
-    let app = Route::new().nest("/api/v1", api_service).nest("/docs", ui);
+    let app = Route::new()
+        .nest("/api/v1", api_service)
+        .nest("/docs", ui);
 
     Ok(app)
 }

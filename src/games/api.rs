@@ -1,9 +1,11 @@
 use super::{Game, GameService};
 use crate::State;
 use crate::api::ErrorResponse;
-use poem_openapi::payload::Json;
+use poem_openapi::payload::{Json, PlainText};
 use poem_openapi::{ApiResponse, Object, OpenApi};
+use poem_openapi::param::Path;
 use serde::Serialize;
+use uuid::Uuid;
 
 #[derive(Object,Serialize)]
 pub struct CreateGameRequest{
@@ -22,8 +24,22 @@ enum GetGamesResponse {
 #[derive(ApiResponse)]
 enum CreateGameResponse {
     /// Game created successfully
-    #[oai(status = 200)]
+    #[oai(status = 201)]
     Ok(Json<Game>),
+    /// An unknown error occurred
+    #[oai(status = 500)]
+    Unknown(Json<ErrorResponse>),
+}
+
+
+#[derive(ApiResponse)]
+enum GetGameCodeResponse {
+    /// Game created successfully
+    #[oai(status = 200)]
+    Ok(PlainText<String>),
+    /// A game with the corresponding id was not found
+    #[oai(status = 404)]
+    NotFound,
     /// An unknown error occurred
     #[oai(status = 500)]
     Unknown(Json<ErrorResponse>),
@@ -69,6 +85,22 @@ impl GamesApi {
             Err(e) => {
                 let response = ErrorResponse::new(&e.to_string());
                 CreateGameResponse::Unknown(Json(response))
+            }
+        }
+    }
+
+    /// Generate a join code for a game
+    #[oai(path="/game/:id/code",method="post")]
+    async fn gen_game_code(&self,id: Path<Uuid>) -> GetGameCodeResponse {
+        let result = self.game_service.create_code(*id).await;
+
+        match result {
+            Ok(code) => {
+                GetGameCodeResponse::Ok(PlainText(code))
+            },
+            Err(e) => {
+                let response = ErrorResponse::new(&e.to_string());
+                GetGameCodeResponse::Unknown(Json(response))
             }
         }
     }

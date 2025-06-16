@@ -49,7 +49,7 @@ async fn create_new_game(pool: PgPool) -> scorekeep::Result<()> {
         .body_json(&body)
         .send().await;
 
-    response.assert_status(StatusCode::OK);
+    response.assert_status(StatusCode::CREATED);
     let body = response.json().await;
     let game: Game = body.value().deserialize();
     assert_eq!(game.name, "My game");
