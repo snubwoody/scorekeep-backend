@@ -51,7 +51,6 @@ pub async fn create_user(pool: &sqlx::PgPool) -> User {
         .await
         .unwrap();
 
-    
     User { id: row.id }
 }
 
