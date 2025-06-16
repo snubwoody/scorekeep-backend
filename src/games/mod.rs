@@ -1,4 +1,4 @@
-mod api;
+pub mod api;
 
 use crate::{State, gen_random_string};
 pub use api::GamesApi;
