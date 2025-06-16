@@ -3,11 +3,10 @@ mod error;
 pub mod games;
 
 use crate::api::Api;
-use crate::games::GameService;
 pub use error::{Error, Result};
 use poem::listener::TcpListener;
 use poem::{Route, Server};
-use poem_openapi::{OpenApi, OpenApiService};
+use poem_openapi::OpenApiService;
 use rand::Rng;
 use rand::distr::Alphanumeric;
 use serde::{Deserialize, Serialize};
@@ -52,8 +51,8 @@ pub async fn create_user(pool: &sqlx::PgPool) -> User {
         .await
         .unwrap();
 
-    let user = User { id: row.id };
-    user
+    
+    User { id: row.id }
 }
 
 /// Generate a random alphanumeric string with a specified length.

@@ -1,6 +1,5 @@
 use crate::State;
-use crate::games::GameService;
-use poem_openapi::{ApiResponse, Object, OpenApi};
+use poem_openapi::{Object, OpenApi};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Object)]
